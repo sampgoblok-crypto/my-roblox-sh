@@ -1,0 +1,200 @@
+
+
+local player = game.Players.LocalPlayer
+local workspace = game:GetService("Workspace")
+local playerGui = player:WaitForChild("PlayerGui")
+local tweenService = game:GetService("TweenService")
+local userInputService = game:GetService("UserInputService")
+
+
+
+local collisionEnabled = false
+local automaticSensorSize = Vector3.new(30, 12, 30) 
+local areaRadius = 18 
+
+
+if playerGui:FindFirstChild("EffortlessResizer") then
+    playerGui.EffortlessResizer:Destroy()
+end
+
+local function getNearestSensor()
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return nil end
+    local myPos = char.HumanoidRootPart.Position
+    
+    local nearest = nil
+    local minDist = math.huge
+    
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Name == "PrizeSensor" then
+            local dist = (obj.Position - myPos).Magnitude
+            if dist < minDist then
+                minDist = dist
+                nearest = obj
+            end
+        end
+    end
+    return nearest
+end
+
+local targetSensor = getNearestSensor()
+if targetSensor then
+    targetSensor.Size = automaticSensorSize
+    targetSensor.Transparency = 1 
+    targetSensor.CanCollide = false
+end
+
+
+if playerGui:FindFirstChild("InstantPrizePanel") then
+    playerGui.InstantPrizePanel:Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "InstantPrizePanel"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 190, 0, 115)
+mainFrame.Position = UDim2.new(1, -210, 0, 120) 
+mainFrame.BackgroundColor3 = Color3.fromRGB(13, 13, 16) 
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+
+local frameStroke = Instance.new("UIStroke")
+frameStroke.Color = Color3.fromRGB(38, 38, 44)
+frameStroke.Thickness = 1
+frameStroke.Parent = mainFrame
+mainFrame.Parent = screenGui
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 35)
+titleLabel.Position = UDim2.new(0, 0, 0, 12)
+titleLabel.Text = "deca auto prize"
+titleLabel.TextColor3 = Color3.fromRGB(240, 240, 245)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 12
+titleLabel.TextTransparency = 0.1
+titleLabel.BackgroundTransparency = 1
+titleLabel.Parent = mainFrame
+
+local bringButton = Instance.new("TextButton")
+bringButton.Size = UDim2.new(1, -24, 0, 42)
+bringButton.Position = UDim2.new(0, 12, 0, 54)
+bringButton.Text = "Pull Prizes"
+bringButton.BackgroundColor3 = Color3.fromRGB(37, 99, 235) 
+bringButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+bringButton.Font = Enum.Font.GothamMedium
+bringButton.TextSize = 13
+bringButton.AutoButtonColor = false
+Instance.new("UICorner", bringButton).CornerRadius = UDim.new(0, 8)
+bringButton.Parent = mainFrame
+
+
+local dragging, dragInput, dragStart, startPos
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+userInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+
+local originalColor = bringButton.BackgroundColor3
+local hoverColor = Color3.fromRGB(29, 78, 216) 
+local clickColor = Color3.fromRGB(30, 58, 138) 
+
+local originalSize = bringButton.Size
+local originalPos = bringButton.Position
+local clickSize = UDim2.new(originalSize.X.Scale, originalSize.X.Offset - 6, originalSize.Y.Scale, originalSize.Y.Offset - 4)
+local clickPos = UDim2.new(originalPos.X.Scale, originalPos.X.Offset + 3, originalPos.Y.Scale, originalPos.Y.Offset + 2)
+
+local tweenInfoFast = TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local tweenInfoReturn = TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+local tweenInfoHover = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+bringButton.MouseEnter:Connect(function() tweenService:Create(bringButton, tweenInfoHover, {BackgroundColor3 = hoverColor}):Play() end)
+bringButton.MouseLeave:Connect(function() tweenService:Create(bringButton, tweenInfoHover, {BackgroundColor3 = originalColor}):Play() end)
+bringButton.MouseButton1Down:Connect(function() tweenService:Create(bringButton, tweenInfoFast, {BackgroundColor3 = clickColor, Size = clickSize, Position = clickPos}):Play() end)
+bringButton.MouseButton1Up:Connect(function() tweenService:Create(bringButton, tweenInfoReturn, {BackgroundColor3 = hoverColor, Size = originalSize, Position = originalPos}):Play() end)
+
+
+local function getClosestPrizeSensor(myPos)
+    local targetSensor = nil
+    local closestDist = math.huge
+    
+    local nearbyParts = workspace:GetPartBoundsInRadius(myPos, 50)
+    
+    for _, obj in ipairs(nearbyParts) do
+        if obj.Name == "PrizeSensor" then
+            local dist = (obj.Position - myPos).Magnitude
+            if dist < closestDist then
+                closestDist = dist
+                targetSensor = obj
+            end
+        end
+    end
+    return targetSensor
+end
+
+
+bringButton.MouseButton1Click:Connect(function()
+    local character = player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+    local playerPosition = character.HumanoidRootPart.Position
+
+    local sensor = getClosestPrizeSensor(playerPosition)
+    if not sensor then 
+        bringButton.Text = "No Sensor Nearby"
+        task.wait(1.5)
+        bringButton.Text = "Bring Prize"
+        return 
+    end
+
+    local movedCount = 0
+
+    local prizesInRadius = workspace:GetPartBoundsInRadius(sensor.Position, areaRadius)
+    
+    for _, obj in ipairs(prizesInRadius) do
+        if obj.Name == "Prize" then
+            obj.CanCollide = collisionEnabled
+            obj.CFrame = sensor.CFrame
+            movedCount = movedCount + 1
+        end
+    end
+
+    if movedCount > 0 then
+        bringButton.Text = "Success (" .. movedCount .. ")"
+        local successTween = tweenService:Create(bringButton, tweenInfoHover, {BackgroundColor3 = Color3.fromRGB(22, 163, 74)}) 
+        successTween:Play()
+        task.wait(1.2)
+        bringButton.Text = "Bring Prize"
+        tweenService:Create(bringButton, tweenInfoHover, {BackgroundColor3 = originalColor}):Play()
+    else
+        bringButton.Text = "No Prizes Found"
+        task.wait(1.2)
+        bringButton.Text = "Bring Prize"
+    end
+end)
