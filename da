@@ -8,7 +8,9 @@ local collisionEnabled = false
 local automaticSensorSize = Vector3.new(30, 12, 30) 
 local areaRadius = 18 
 
-
+-- ==========================================
+-- SENSOR LOGIC (BACKGROUND)
+-- ==========================================
 if playerGui:FindFirstChild("EffortlessResizer") then
     playerGui.EffortlessResizer:Destroy()
 end
@@ -35,13 +37,14 @@ end
 
 local targetSensor = getNearestSensor()
 if targetSensor then
-
     targetSensor.Size = automaticSensorSize
     targetSensor.Transparency = 1 
     targetSensor.CanCollide = false
 end
 
-
+-- ==========================================
+-- MONOCHROME UI BUILDER (BORDERLESS)
+-- ==========================================
 if playerGui:FindFirstChild("InstantPrizePanel") then
     playerGui.InstantPrizePanel:Destroy()
 end
@@ -51,61 +54,107 @@ screenGui.Name = "InstantPrizePanel"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
+-- MAIN WINDOW (No Outlines)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 190, 0, 115)
-mainFrame.Position = UDim2.new(1, -210, 0, 120) 
-mainFrame.BackgroundColor3 = Color3.fromRGB(13, 13, 16) 
+mainFrame.Size = UDim2.new(0, 210, 0, 160)
+mainFrame.Position = UDim2.new(1, -230, 0, 120) 
+mainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12) -- Pure Dark
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
-Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
-
-local frameStroke = Instance.new("UIStroke")
-frameStroke.Color = Color3.fromRGB(38, 38, 44)
-frameStroke.Thickness = 1
-frameStroke.Parent = mainFrame
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
 mainFrame.Parent = screenGui
 
+-- TOP BAR (DRAG AREA & TITLE)
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 35)
+topBar.BackgroundTransparency = 1
+topBar.Parent = mainFrame
+
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, 0, 0, 35)
-titleLabel.Position = UDim2.new(0, 0, 0, 12)
-titleLabel.Text = "deca prize bringer"
-titleLabel.TextColor3 = Color3.fromRGB(240, 240, 245)
-titleLabel.Font = Enum.Font.GothamBold
-titleLabel.TextSize = 12
-titleLabel.TextTransparency = 0.1
+titleLabel.Size = UDim2.new(1, -20, 1, 0)
+titleLabel.Position = UDim2.new(0, 10, 0, 0)
+titleLabel.Text = "DECA BRINGER (WAIT 10S)"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.GothamBlack
+titleLabel.TextSize = 10
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.BackgroundTransparency = 1
-titleLabel.Parent = mainFrame
+titleLabel.Parent = topBar
 
-local bringButton = Instance.new("TextButton")
-bringButton.Size = UDim2.new(1, -24, 0, 42)
-bringButton.Position = UDim2.new(0, 12, 0, 54)
-bringButton.Text = "get prizes"
-bringButton.BackgroundColor3 = Color3.fromRGB(37, 99, 235) 
-bringButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-bringButton.Font = Enum.Font.GothamMedium
-bringButton.TextSize = 13
-bringButton.AutoButtonColor = false
-Instance.new("UICorner", bringButton).CornerRadius = UDim.new(0, 8)
-bringButton.Parent = mainFrame
+-- SUBTLE SEPARATOR LINE
+local accentLine = Instance.new("Frame")
+accentLine.Size = UDim2.new(1, 0, 0, 1)
+accentLine.Position = UDim2.new(0, 0, 1, 0)
+accentLine.BackgroundColor3 = Color3.fromRGB(35, 35, 35) -- Dark split line instead of gradient
+accentLine.BorderSizePixel = 0
+accentLine.Parent = topBar
 
--- DRAGGABLE UI LOGIC
+-- CONTENT CONTAINER (AUTO-LAYOUT)
+local contentContainer = Instance.new("Frame")
+contentContainer.Size = UDim2.new(1, -24, 1, -50)
+contentContainer.Position = UDim2.new(0, 12, 0, 45)
+contentContainer.BackgroundTransparency = 1
+contentContainer.Parent = mainFrame
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 10)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+listLayout.Parent = contentContainer
+
+-- FUNCTION TO CREATE BUTTONS (BORDERLESS STYLE)
+local function createButton(name, text, bgColor, textColor)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Size = UDim2.new(1, 0, 0, 42)
+    btn.BackgroundColor3 = bgColor
+    btn.BorderSizePixel = 0
+    btn.Text = ""
+    btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = text
+    textLabel.TextColor3 = textColor
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextSize = 11
+    textLabel.Parent = btn
+
+    btn.Parent = contentContainer
+    return btn, textLabel
+end
+
+-- INSTANTIATE BUTTONS
+local whiteColor = Color3.fromRGB(255, 255, 255)
+local blackColor = Color3.fromRGB(22, 22, 26) -- Adjusted slightly for contrast against main frame
+local textColorDark = Color3.fromRGB(10, 10, 10)
+local textColorLight = Color3.fromRGB(240, 240, 240)
+
+local bringButton, bringText = createButton("BringBtn", "GET PRIZES", whiteColor, textColorDark)
+local resetButton, resetText = createButton("ResetBtn", "RESET CHARACTER", blackColor, textColorLight)
+
+-- ==========================================
+-- INTERACTIONS & HOVER ANIMATIONS
+-- ==========================================
+
+-- DRAGGABLE LOGIC
 local dragging, dragInput, dragStart, startPos
 
-mainFrame.InputBegan:Connect(function(input)
+topBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = mainFrame.Position
 
         input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
         end)
     end
 end)
 
-mainFrame.InputChanged:Connect(function(input)
+topBar.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         dragInput = input
     end
@@ -118,30 +167,38 @@ userInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- SMOOTH HOVER ANIMATIONS (PHYSICAL SQUEEZE)
+local tweenInfoHover = TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+local tweenInfoClick = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-local originalColor = bringButton.BackgroundColor3
-local hoverColor = Color3.fromRGB(29, 78, 216) 
-local clickColor = Color3.fromRGB(30, 58, 138) 
+local function animateButton(button, baseBg, hoverBg, clickBg)
+    local originalSize = UDim2.new(1, 0, 0, 42)
+    local hoverSize = UDim2.new(1, -8, 0, 42) 
+    local clickSize = UDim2.new(1, -12, 0, 40) 
 
-local originalSize = bringButton.Size
-local originalPos = bringButton.Position
-local clickSize = UDim2.new(originalSize.X.Scale, originalSize.X.Offset - 6, originalSize.Y.Scale, originalSize.Y.Offset - 4)
-local clickPos = UDim2.new(originalPos.X.Scale, originalPos.X.Offset + 3, originalPos.Y.Scale, originalPos.Y.Offset + 2)
+    button.MouseEnter:Connect(function() 
+        tweenService:Create(button, tweenInfoHover, {BackgroundColor3 = hoverBg, Size = hoverSize}):Play() 
+    end)
+    button.MouseLeave:Connect(function() 
+        tweenService:Create(button, tweenInfoHover, {BackgroundColor3 = baseBg, Size = originalSize}):Play() 
+    end)
+    button.MouseButton1Down:Connect(function() 
+        tweenService:Create(button, tweenInfoClick, {BackgroundColor3 = clickBg, Size = clickSize}):Play() 
+    end)
+    button.MouseButton1Up:Connect(function() 
+        tweenService:Create(button, tweenInfoHover, {BackgroundColor3 = hoverBg, Size = hoverSize}):Play() 
+    end)
+end
 
-local tweenInfoFast = TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local tweenInfoReturn = TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-local tweenInfoHover = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+animateButton(bringButton, whiteColor, Color3.fromRGB(210, 210, 210), Color3.fromRGB(160, 160, 160))
+animateButton(resetButton, blackColor, Color3.fromRGB(35, 35, 40), Color3.fromRGB(55, 55, 60))
 
-bringButton.MouseEnter:Connect(function() tweenService:Create(bringButton, tweenInfoHover, {BackgroundColor3 = hoverColor}):Play() end)
-bringButton.MouseLeave:Connect(function() tweenService:Create(bringButton, tweenInfoHover, {BackgroundColor3 = originalColor}):Play() end)
-bringButton.MouseButton1Down:Connect(function() tweenService:Create(bringButton, tweenInfoFast, {BackgroundColor3 = clickColor, Size = clickSize, Position = clickPos}):Play() end)
-bringButton.MouseButton1Up:Connect(function() tweenService:Create(bringButton, tweenInfoReturn, {BackgroundColor3 = hoverColor, Size = originalSize, Position = originalPos}):Play() end)
-
-
+-- ==========================================
+-- CORE FUNCTIONS
+-- ==========================================
 local function getClosestPrizeSensor(myPos)
-    local targetSensor = nil
+    local target = nil
     local closestDist = math.huge
-    
     local nearbyParts = workspace:GetPartBoundsInRadius(myPos, 50)
     
     for _, obj in ipairs(nearbyParts) do
@@ -149,29 +206,27 @@ local function getClosestPrizeSensor(myPos)
             local dist = (obj.Position - myPos).Magnitude
             if dist < closestDist then
                 closestDist = dist
-                targetSensor = obj
+                target = obj
             end
         end
     end
-    return targetSensor
+    return target
 end
 
-
+-- BUTTON EVENTS
 bringButton.MouseButton1Click:Connect(function()
     local character = player.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    local playerPosition = character.HumanoidRootPart.Position
 
-    local sensor = getClosestPrizeSensor(playerPosition)
+    local sensor = getClosestPrizeSensor(character.HumanoidRootPart.Position)
     if not sensor then 
-        bringButton.Text = "No Sensor Nearby"
+        bringText.Text = "NO SENSOR NEARBY"
         task.wait(1.5)
-        bringButton.Text = "Bring Prize"
+        bringText.Text = "GET PRIZES"
         return 
     end
 
     local movedCount = 0
-
     local prizesInRadius = workspace:GetPartBoundsInRadius(sensor.Position, areaRadius)
     
     for _, obj in ipairs(prizesInRadius) do
@@ -183,15 +238,21 @@ bringButton.MouseButton1Click:Connect(function()
     end
 
     if movedCount > 0 then
-        bringButton.Text = "Success (" .. movedCount .. ")"
-        local successTween = tweenService:Create(bringButton, tweenInfoHover, {BackgroundColor3 = Color3.fromRGB(22, 163, 74)}) 
-        successTween:Play()
-        task.wait(1.2)
-        bringButton.Text = "Bring Prize"
-        tweenService:Create(bringButton, tweenInfoHover, {BackgroundColor3 = originalColor}):Play()
+        bringText.Text = "PULLED (" .. movedCount .. ")"
+        tweenService:Create(bringText, tweenInfoHover, {TextColor3 = Color3.fromRGB(120, 120, 120)}):Play()
+        task.wait(1.5)
+        bringText.Text = "GET PRIZES"
+        tweenService:Create(bringText, tweenInfoHover, {TextColor3 = textColorDark}):Play()
     else
-        bringButton.Text = "No Prizes Found"
-        task.wait(1.2)
-        bringButton.Text = "Bring Prize"
+        bringText.Text = "NO PRIZES FOUND"
+        task.wait(1.5)
+        bringText.Text = "GET PRIZES"
+    end
+end)
+
+resetButton.MouseButton1Click:Connect(function()
+    local character = player.Character
+    if character and character:FindFirstChild("Humanoid") then
+        character.Humanoid.Health = 0
     end
 end)
