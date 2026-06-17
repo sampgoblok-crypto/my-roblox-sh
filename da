@@ -1,6 +1,5 @@
 local player = game.Players.LocalPlayer
 local workspace = game:GetService("Workspace")
-local playerGui = player:WaitForChild("PlayerGui")
 local tweenService = game:GetService("TweenService")
 local userInputService = game:GetService("UserInputService")
 
@@ -9,12 +8,20 @@ local automaticSensorSize = Vector3.new(30, 12, 30)
 local areaRadius = 18 
 
 -- ==========================================
--- SENSOR LOGIC (BACKGROUND)
+-- TARGET PARENT (BYPASS ESC MENU)
 -- ==========================================
-if playerGui:FindFirstChild("EffortlessResizer") then
-    playerGui.EffortlessResizer:Destroy()
+-- Menggunakan CoreGui agar tetap aktif saat menu Pause terbuka
+local targetParent
+if type(gethui) == "function" then
+    targetParent = gethui()
+else
+    local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
+    targetParent = (success and coreGui) and coreGui or player:WaitForChild("PlayerGui")
 end
 
+-- ==========================================
+-- SENSOR LOGIC (BACKGROUND)
+-- ==========================================
 local function getNearestSensor()
     local char = player.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return nil end
@@ -43,28 +50,29 @@ if targetSensor then
 end
 
 -- ==========================================
--- MONOCHROME UI BUILDER (BORDERLESS)
+-- MONOCHROME UI BUILDER (CORE GUI / EXTERNAL)
 -- ==========================================
-if playerGui:FindFirstChild("InstantPrizePanel") then
-    playerGui.InstantPrizePanel:Destroy()
+if targetParent:FindFirstChild("InstantPrizePanel") then
+    targetParent.InstantPrizePanel:Destroy()
 end
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "InstantPrizePanel"
 screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
+screenGui.IgnoreGuiInset = true 
+screenGui.Parent = targetParent
 
--- MAIN WINDOW (No Outlines)
+-- MAIN WINDOW
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 210, 0, 160)
-mainFrame.Position = UDim2.new(1, -230, 0, 120) 
-mainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12) -- Pure Dark
+mainFrame.Position = UDim2.new(1, -230, 0, 140) 
+mainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12) 
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
 mainFrame.Parent = screenGui
 
--- TOP BAR (DRAG AREA & TITLE)
+-- TOP BAR (DRAG AREA)
 local topBar = Instance.new("Frame")
 topBar.Size = UDim2.new(1, 0, 0, 35)
 topBar.BackgroundTransparency = 1
@@ -85,7 +93,7 @@ titleLabel.Parent = topBar
 local accentLine = Instance.new("Frame")
 accentLine.Size = UDim2.new(1, 0, 0, 1)
 accentLine.Position = UDim2.new(0, 0, 1, 0)
-accentLine.BackgroundColor3 = Color3.fromRGB(35, 35, 35) -- Dark split line instead of gradient
+accentLine.BackgroundColor3 = Color3.fromRGB(35, 35, 35) 
 accentLine.BorderSizePixel = 0
 accentLine.Parent = topBar
 
@@ -128,7 +136,7 @@ end
 
 -- INSTANTIATE BUTTONS
 local whiteColor = Color3.fromRGB(255, 255, 255)
-local blackColor = Color3.fromRGB(22, 22, 26) -- Adjusted slightly for contrast against main frame
+local blackColor = Color3.fromRGB(22, 22, 26) 
 local textColorDark = Color3.fromRGB(10, 10, 10)
 local textColorLight = Color3.fromRGB(240, 240, 240)
 
@@ -139,7 +147,7 @@ local resetButton, resetText = createButton("ResetBtn", "RESET CHARACTER", black
 -- INTERACTIONS & HOVER ANIMATIONS
 -- ==========================================
 
--- DRAGGABLE LOGIC
+-- STABLE DRAGGABLE LOGIC
 local dragging, dragInput, dragStart, startPos
 
 topBar.InputBegan:Connect(function(input)
@@ -167,8 +175,8 @@ userInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- SMOOTH HOVER ANIMATIONS (PHYSICAL SQUEEZE)
-local tweenInfoHover = TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+-- SMOOTH NATIVE ANIMATIONS
+local tweenInfoHover = TweenInfo.new(0.15, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 local tweenInfoClick = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
 local function animateButton(button, baseBg, hoverBg, clickBg)
