@@ -24,7 +24,7 @@ end
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 230, 0, 165)
 MainFrame.Position = UDim2.new(0.5, -115, 0.5, -82)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20) -- Modern dark theme
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20) 
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true 
@@ -49,7 +49,7 @@ TitleLabel.TextSize = 16
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.Parent = MainFrame
 
--- Divider line for a professional look
+-- Divider line
 local Divider = Instance.new("Frame")
 Divider.Size = UDim2.new(0.85, 0, 0, 1)
 Divider.Position = UDim2.new(0.075, 0, 0, 38)
@@ -57,7 +57,7 @@ Divider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 Divider.BorderSizePixel = 0
 Divider.Parent = MainFrame
 
--- 5. Create the "Coin Farm" Button (Replaced Fully Auto)
+-- 5. Create the "Coin Farm" Button
 local CoinFarmButton = Instance.new("TextButton")
 CoinFarmButton.Size = UDim2.new(0.85, 0, 0, 40)
 CoinFarmButton.Position = UDim2.new(0.075, 0, 0, 55)
@@ -116,7 +116,7 @@ local function waitForRespawn()
     task.wait(0.1) 
 end
 
--- 8. Coin Farm Logic (1-61 Looping + Reset)
+-- 8. Coin Farm Logic (1-61 Instant Loop + Reset)
 local isCoinFarm = false
 
 CoinFarmButton.MouseButton1Click:Connect(function()
@@ -124,15 +124,15 @@ CoinFarmButton.MouseButton1Click:Connect(function()
     
     if isCoinFarm then
         CoinFarmButton.Text = "Coin Farm: ON"
-        CoinFarmButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100) -- Premium Green
+        CoinFarmButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100) 
         CoinFarmStroke.Color = Color3.fromRGB(0, 220, 130)
         
         task.spawn(function()
             while isCoinFarm do
+                -- INSTANT FIRE: Removed task.wait() from this loop
                 for i = 1, 61 do
                     if not isCoinFarm then break end 
                     CheckpointEvent:FireServer(i)
-                    task.wait() 
                 end
                 
                 if isCoinFarm then
@@ -155,13 +155,12 @@ AutoWinButton.MouseButton1Click:Connect(function()
     
     if isAutoWin then
         AutoWinButton.Text = "Auto Win: ON"
-        AutoWinButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100) -- Premium Green
+        AutoWinButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100) 
         AutoWinStroke.Color = Color3.fromRGB(0, 220, 130)
         
         task.spawn(function()
             while isAutoWin do
                 CheckpointEvent:FireServer(61)
-                task.wait()
                 
                 if isAutoWin then
                     waitForRespawn()
