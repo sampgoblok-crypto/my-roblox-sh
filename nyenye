@@ -1,0 +1,176 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- 1. Define the RemoteEvents
+local Signals = ReplicatedStorage:WaitForChild("Signals")
+local RemoteEvents = Signals:WaitForChild("RemoteEvents")
+local CheckpointEvent = RemoteEvents:WaitForChild("Checkpoint")
+local ResetEvent = RemoteEvents:WaitForChild("ResetCharacter")
+
+-- 2. Create the Main GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ASMRTowerUI"
+ScreenGui.ResetOnSpawn = false 
+
+-- Protect GUI if executor supports it, otherwise put in PlayerGui
+local success = pcall(function()
+    ScreenGui.Parent = game:GetService("CoreGui")
+end)
+if not success then
+    ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- 3. Create the Sleek Background Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 230, 0, 165)
+MainFrame.Position = UDim2.new(0.5, -115, 0.5, -82)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20) -- Modern dark theme
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true 
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(60, 60, 60)
+MainStroke.Thickness = 1.5
+MainStroke.Parent = MainFrame
+
+-- 4. Create the Title TextLabel
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0, 40)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "ASMR Tower okegas"
+TitleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+TitleLabel.TextSize = 16
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Parent = MainFrame
+
+-- Divider line for a professional look
+local Divider = Instance.new("Frame")
+Divider.Size = UDim2.new(0.85, 0, 0, 1)
+Divider.Position = UDim2.new(0.075, 0, 0, 38)
+Divider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+Divider.BorderSizePixel = 0
+Divider.Parent = MainFrame
+
+-- 5. Create the "Coin Farm" Button (Replaced Fully Auto)
+local CoinFarmButton = Instance.new("TextButton")
+CoinFarmButton.Size = UDim2.new(0.85, 0, 0, 40)
+CoinFarmButton.Position = UDim2.new(0.075, 0, 0, 55)
+CoinFarmButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+CoinFarmButton.Text = "Coin Farm: OFF"
+CoinFarmButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+CoinFarmButton.Font = Enum.Font.GothamSemibold
+CoinFarmButton.TextSize = 15
+CoinFarmButton.AutoButtonColor = true
+CoinFarmButton.Parent = MainFrame
+
+local CoinFarmCorner = Instance.new("UICorner")
+CoinFarmCorner.CornerRadius = UDim.new(0, 6)
+CoinFarmCorner.Parent = CoinFarmButton
+
+local CoinFarmStroke = Instance.new("UIStroke")
+CoinFarmStroke.Color = Color3.fromRGB(80, 80, 80)
+CoinFarmStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+CoinFarmStroke.Parent = CoinFarmButton
+
+-- 6. Create the "Auto Win" Button
+local AutoWinButton = Instance.new("TextButton")
+AutoWinButton.Size = UDim2.new(0.85, 0, 0, 40)
+AutoWinButton.Position = UDim2.new(0.075, 0, 0, 105)
+AutoWinButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+AutoWinButton.Text = "Auto Win: OFF"
+AutoWinButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+AutoWinButton.Font = Enum.Font.GothamSemibold
+AutoWinButton.TextSize = 15
+AutoWinButton.AutoButtonColor = true
+AutoWinButton.Parent = MainFrame
+
+local AutoWinCorner = Instance.new("UICorner")
+AutoWinCorner.CornerRadius = UDim.new(0, 6)
+AutoWinCorner.Parent = AutoWinButton
+
+local AutoWinStroke = Instance.new("UIStroke")
+AutoWinStroke.Color = Color3.fromRGB(80, 80, 80)
+AutoWinStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+AutoWinStroke.Parent = AutoWinButton
+
+-- 7. Smart Respawn Helper Function
+local function waitForRespawn()
+    local player = Players.LocalPlayer
+    local oldCharacter = player.Character
+    
+    ResetEvent:FireServer(true)
+    
+    while player.Character == oldCharacter do
+        task.wait(0.05)
+    end
+    
+    local newCharacter = player.Character or player.CharacterAdded:Wait()
+    newCharacter:WaitForChild("HumanoidRootPart", 5)
+    
+    task.wait(0.1) 
+end
+
+-- 8. Coin Farm Logic (1-61 Looping + Reset)
+local isCoinFarm = false
+
+CoinFarmButton.MouseButton1Click:Connect(function()
+    isCoinFarm = not isCoinFarm 
+    
+    if isCoinFarm then
+        CoinFarmButton.Text = "Coin Farm: ON"
+        CoinFarmButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100) -- Premium Green
+        CoinFarmStroke.Color = Color3.fromRGB(0, 220, 130)
+        
+        task.spawn(function()
+            while isCoinFarm do
+                for i = 1, 61 do
+                    if not isCoinFarm then break end 
+                    CheckpointEvent:FireServer(i)
+                    task.wait() 
+                end
+                
+                if isCoinFarm then
+                    waitForRespawn()
+                end
+            end
+        end)
+    else
+        CoinFarmButton.Text = "Coin Farm: OFF"
+        CoinFarmButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
+        CoinFarmStroke.Color = Color3.fromRGB(80, 80, 80)
+    end
+end)
+
+-- 9. Auto Win Logic (Checkpoint 61 Only + Reset)
+local isAutoWin = false
+
+AutoWinButton.MouseButton1Click:Connect(function()
+    isAutoWin = not isAutoWin
+    
+    if isAutoWin then
+        AutoWinButton.Text = "Auto Win: ON"
+        AutoWinButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100) -- Premium Green
+        AutoWinStroke.Color = Color3.fromRGB(0, 220, 130)
+        
+        task.spawn(function()
+            while isAutoWin do
+                CheckpointEvent:FireServer(61)
+                task.wait()
+                
+                if isAutoWin then
+                    waitForRespawn()
+                end
+            end
+        end)
+    else
+        AutoWinButton.Text = "Auto Win: OFF"
+        AutoWinButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
+        AutoWinStroke.Color = Color3.fromRGB(80, 80, 80)
+    end
+end)
